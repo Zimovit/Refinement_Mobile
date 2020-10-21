@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Refinement Mobile</string>
+    <string name="header">Таблица заточки</string>
+    <string name="counterButton">Рассчитать</string>
+</resources>
