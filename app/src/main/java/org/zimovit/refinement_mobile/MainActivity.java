@@ -31,11 +31,9 @@ public class MainActivity extends AppCompatActivity {
 
     Button calculateButton;
 
-    //table:
-    //rows
-    TableRow[] rows = new TableRow[8];
-    //cells
-    TextView[][] cells = new TextView[7][3];
+    //table array
+
+    String[] cells = new String[24];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,38 +51,23 @@ public class MainActivity extends AppCompatActivity {
         //creating table
 
         //first row
-        rows[0] = new TableRow(this);
-        TextView plusTenLabel = new TextView(this);
-        plusTenLabel.setText("С безопасной заточкой до уровня");
-        //covers two cells
-        TableRow.LayoutParams params = new TableRow.LayoutParams();
-        params.span = 2;
-        //add to row
-        rows[0].addView(plusTenLabel, params);
-        //+15 tab
-        TextView plus15Label = new TextView(this);
-        plus15Label.setText("+15");
-        rows[0].addView(plus15Label);
+        cells[0] = "Уровень безопасной";
+        cells[1] = "Средняя стоимость";
+        cells[2] = "До +15";
 
         //consecutive rows
-        for (int i = 1; i < 8; i++){
-            rows[i] = new TableRow(this);
-            //filling row with cells
-            cells[i-1][0] = new TextView(this);
-            String string = "+" + (i+5);
-            cells[i-1][0].setText(string);
-
-            cells[i-1][1] = new TextView(this);
-            cells[i-1][1].setText("0");
-            cells[i-1][2] = new TextView(this);
-            cells[i-1][2].setText("0");
-            for (int j = 0; j < 3; j++) rows[i].addView(cells[i-1][j]);
+        for (int i = 3; i < 19; i += 3){
+            cells[i] = "+"+(i-3)/3+5;
+            cells[i+1] = "0";
+            cells[i+2] = "0";
         }
 
-        TableLayout table = (TableLayout)findViewById(R.id.table);
-        for (int i = 0; i < rows.length; i++) table.addView(rows[i]);
+        //last row
+        cells[21] = "Небезопасная";
+        cells[22] = "0";
+        cells[23] = "0";
 
-        //Table is formed
+                //Table is formed
 
         //price and number of tries fields
         price = (EditText) findViewById(R.id.priceOfItem);
@@ -122,24 +105,28 @@ public class MainActivity extends AppCompatActivity {
         //точка до +4
         int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
 
-        for (int i = 0; i < 6; i++){
+        for (int i = 1; i < 9; i++){
             BigInteger unsafeMediumCost = new BigInteger("0");
+            //a lot of tries
             for (int j = 0; j < tries; j++){
                 unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+5, 10))));
 
             }
-            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
-            int cost = refinementPrice + safeRefinement(i+5) + unsafeMediumCost.intValue();
-            cells[i][1].setText(String.valueOf(cost));
+            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
+            int cost = refinementPrice + safeRefinement(i+5) + unsafeMediumCost.intValue();//final cost
+            cells[i*3+1] = String.valueOf(cost);
+
+            //calculating +15
             unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
                 unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
             cost = cost+unsafeMediumCost.intValue();
-            cells[i][2].setText(String.valueOf(cost));
+            cells[i*3+2] = String.valueOf(cost);
         }
 
+        //totally unsafe
         BigInteger unsafeMediumCost = new BigInteger("0");
         for (int j = 0; j < tries; j++){
             unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(4, 10))));
@@ -147,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         }
         unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
         int cost = refinementPrice + unsafeMediumCost.intValue();
-        cells[6][1].setText(String.valueOf(cost));
+        cells[22] = String.valueOf(cost);
 
         unsafeMediumCost = new BigInteger("0");
         for (int j = 0; j < tries; j++){
@@ -155,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         }
         unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
-        cells[6][2].setText(String.valueOf(cost+unsafeMediumCost.intValue()));
+        cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());
     }
 
     private void showError(){
