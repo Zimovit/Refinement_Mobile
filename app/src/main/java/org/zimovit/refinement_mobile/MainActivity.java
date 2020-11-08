@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -35,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
 
     String[] cells = new String[24];
 
+    GridView gv;
+    ArrayAdapter<String> adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         //consecutive rows
         for (int i = 3; i < 19; i += 3){
-            cells[i] = "+"+(i-3)/3+5;
+            cells[i] = "+"+((i-3)/3+5);
             cells[i+1] = "0";
             cells[i+2] = "0";
         }
@@ -67,7 +72,14 @@ public class MainActivity extends AppCompatActivity {
         cells[22] = "0";
         cells[23] = "0";
 
-                //Table is formed
+        //Table is formed
+
+        adapter = new ArrayAdapter<>(this, R.layout.item, R.id.tvText, cells);
+        gv = (GridView) findViewById(R.id.grid);
+        gv.setAdapter(adapter);
+        gv.setNumColumns(3);
+        gv.setVerticalSpacing(5);
+        gv.setHorizontalSpacing(5);
 
         //price and number of tries fields
         price = (EditText) findViewById(R.id.priceOfItem);
@@ -105,15 +117,15 @@ public class MainActivity extends AppCompatActivity {
         //точка до +4
         int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
 
-        for (int i = 1; i < 9; i++){
+        for (int i = 1; i < 7; i++){
             BigInteger unsafeMediumCost = new BigInteger("0");
             //a lot of tries
             for (int j = 0; j < tries; j++){
-                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+5, 10))));
+                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+4, 10))));
 
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
-            int cost = refinementPrice + safeRefinement(i+5) + unsafeMediumCost.intValue();//final cost
+            int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
             cells[i*3+1] = String.valueOf(cost);
 
             //calculating +15
@@ -143,6 +155,9 @@ public class MainActivity extends AppCompatActivity {
         unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
         cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());
+
+        //changing data
+        adapter.notifyDataSetChanged();
     }
 
     private void showError(){
