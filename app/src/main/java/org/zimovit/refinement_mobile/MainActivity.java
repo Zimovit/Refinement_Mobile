@@ -2,6 +2,7 @@ package org.zimovit.refinement_mobile;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -114,8 +115,12 @@ public class MainActivity extends AppCompatActivity {
             showError();
             return;
         }
+
+        //running background task
+        BackgroundProcess backgroundProcess = new BackgroundProcess();
+        backgroundProcess.execute(itemPrice, tries);
         //точка до +4
-        int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
+        /*int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
 
         for (int i = 1; i < 7; i++){
             BigInteger unsafeMediumCost = new BigInteger("0");
@@ -154,10 +159,9 @@ public class MainActivity extends AppCompatActivity {
         }
         unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
-        cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());
+        cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());*/
 
         //changing data
-        adapter.notifyDataSetChanged();
     }
 
     private void showError(){
@@ -235,5 +239,80 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return cost;
+    }
+
+    /**
+     * AsyncTask private class to process in background
+     * takes price and number of tries as parameters
+     * and updates static cells array
+     */
+    private class BackgroundProcess extends AsyncTask<Integer, Integer, String[]>{
+
+        @Override
+        protected void onPreExecute(){
+            //just disabling the button to prevent task rerun
+            calculateButton.setEnabled(false);
+        }
+
+        @Override
+        protected String[] doInBackground(Integer... integers) {
+
+            String[] result = new String[24];   //initialising array
+
+            //taking params
+            int itemPrice = integers[0];
+            int tries = integers[1];
+
+            //calculating
+            //точка до +4
+            int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
+
+            for (int i = 1; i < 7; i++){
+                BigInteger unsafeMediumCost = new BigInteger("0");
+                //a lot of tries
+                for (int j = 0; j < tries; j++){
+                    unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+4, 10))));
+
+                }
+                unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
+                int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
+                result[i*3+1] = String.valueOf(cost);
+
+                //calculating +15
+                unsafeMediumCost = new BigInteger("0");
+                for (int j = 0; j < tries; j++){
+                    unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
+                }
+                unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
+                cost = cost+unsafeMediumCost.intValue();
+                result[i*3+2] = String.valueOf(cost);
+            }
+
+            //totally unsafe
+            BigInteger unsafeMediumCost = new BigInteger("0");
+            for (int j = 0; j < tries; j++){
+                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(4, 10))));
+
+            }
+            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
+            int cost = refinementPrice + unsafeMediumCost.intValue();
+            result[22] = String.valueOf(cost);
+
+            unsafeMediumCost = new BigInteger("0");
+            for (int j = 0; j < tries; j++){
+                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
+            }
+            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
+
+            result[23] = String.valueOf(cost+unsafeMediumCost.intValue());
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String[] result){
+            cells = result;
+            adapter.notifyDataSetChanged();
+            calculateButton.setEnabled(true);
+        }
     }
 }
