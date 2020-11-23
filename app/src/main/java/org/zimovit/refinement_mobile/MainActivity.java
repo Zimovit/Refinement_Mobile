@@ -241,12 +241,19 @@ public class MainActivity extends AppCompatActivity {
         return cost;
     }
 
+    private void dataUpdate(String[] update){
+        cells = update.clone();
+        adapter.notifyDataSetChanged();
+    }
+
     /**
      * AsyncTask private class to process in background
      * takes price and number of tries as parameters
      * and updates static cells array
      */
     private class BackgroundProcess extends AsyncTask<Integer, Integer, String[]>{
+
+        String[] result = cells.clone();   //initialising array
 
         @Override
         protected void onPreExecute(){
@@ -257,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String[] doInBackground(Integer... integers) {
 
-            String[] result = new String[24];   //initialising array
 
             //taking params
             int itemPrice = integers[0];
@@ -310,8 +316,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String[] result){
-            cells = result;
-            adapter.notifyDataSetChanged();
+            cells = result.clone();
             calculateButton.setEnabled(true);
         }
     }
