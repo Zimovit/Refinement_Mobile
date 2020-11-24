@@ -21,18 +21,16 @@ public class MainActivity extends AppCompatActivity {
 
     //ported from desktop app
     private static final int MATERIAL_COST = 25000;
-    private static final int IMPROVED_MATERIAL_COST = 125000;
     private static final int REFINEMENT_COST = 10000;
     private static int itemPrice;
     private static double chanceToRefine = 0.5, chanceToBrake = 0.25;
-    private static int numberOfTries = 1000000;
     private static int[][] safeRefinementTable ={{1, 5, 100000}, {2, 10, 220000}, {3, 15, 470000}, {4, 25, 910000}, {6, 50, 1630000}, {10, 85, 2740000}};
     private EditText price, numberOfTriesField;
 
     //debugging tag
     private final String TAG = this.getClass().getSimpleName();
 
-    Button calculateButton;
+    Button calculateButton, cancelButton;
 
     //table array
 
@@ -96,9 +94,21 @@ public class MainActivity extends AppCompatActivity {
         };
         calculateButton.setOnClickListener(buttonClicked);
 
+        cancelButton = findViewById(R.id.cancelButton);
+        cancelButton.setEnabled(false);
+        View.OnClickListener cancelClicked = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("qwerty", adapter.getItem(0));
+                cancelButton.setEnabled(false);
+                adapter.notifyDataSetChanged();
+            }
+        };
+        cancelButton.setOnClickListener(cancelClicked);
+
     }
 
-    //main calculating method
+    //no longer main calculating method
     private void calculate() {
         int tries;
 
@@ -119,49 +129,7 @@ public class MainActivity extends AppCompatActivity {
         //running background task
         BackgroundProcess backgroundProcess = new BackgroundProcess();
         backgroundProcess.execute(itemPrice, tries);
-        //точка до +4
-        /*int refinementPrice = itemPrice + MATERIAL_COST*4 + REFINEMENT_COST*10;
 
-        for (int i = 1; i < 7; i++){
-            BigInteger unsafeMediumCost = new BigInteger("0");
-            //a lot of tries
-            for (int j = 0; j < tries; j++){
-                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+4, 10))));
-
-            }
-            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
-            int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
-            cells[i*3+1] = String.valueOf(cost);
-
-            //calculating +15
-            unsafeMediumCost = new BigInteger("0");
-            for (int j = 0; j < tries; j++){
-                unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
-            }
-            unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
-            cost = cost+unsafeMediumCost.intValue();
-            cells[i*3+2] = String.valueOf(cost);
-        }
-
-        //totally unsafe
-        BigInteger unsafeMediumCost = new BigInteger("0");
-        for (int j = 0; j < tries; j++){
-            unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(4, 10))));
-
-        }
-        unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
-        int cost = refinementPrice + unsafeMediumCost.intValue();
-        cells[22] = String.valueOf(cost);
-
-        unsafeMediumCost = new BigInteger("0");
-        for (int j = 0; j < tries; j++){
-            unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
-        }
-        unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
-
-        cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());*/
-
-        //changing data
     }
 
     private void showError(){
@@ -241,10 +209,6 @@ public class MainActivity extends AppCompatActivity {
         return cost;
     }
 
-    private void dataUpdate(String[] update){
-        cells = update.clone();
-        adapter.notifyDataSetChanged();
-    }
 
     /**
      * AsyncTask private class to process in background
@@ -318,6 +282,11 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String[] result){
             cells = result.clone();
             calculateButton.setEnabled(true);
+            adapter.notifyDataSetChanged();
+            cancelButton.setEnabled(true);
         }
+
+        //TODO implement progress bar update
+        //TODO implement cancel
     }
 }
