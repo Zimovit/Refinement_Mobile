@@ -217,8 +217,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private class BackgroundProcess extends AsyncTask<Integer, Integer, String[]>{
 
-        String[] result = cells.clone();   //initialising array
-
         @Override
         protected void onPreExecute(){
             //just disabling the button to prevent task rerun
@@ -246,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
                 int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
-                result[i*3+1] = String.valueOf(cost);
+                cells[i*3+1] = String.valueOf(cost);
 
                 //calculating +15
                 unsafeMediumCost = new BigInteger("0");
@@ -255,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
                 cost = cost+unsafeMediumCost.intValue();
-                result[i*3+2] = String.valueOf(cost);
+                cells[i*3+2] = String.valueOf(cost);
             }
 
             //totally unsafe
@@ -266,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
             int cost = refinementPrice + unsafeMediumCost.intValue();
-            result[22] = String.valueOf(cost);
+            cells[22] = String.valueOf(cost);
 
             unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
@@ -274,13 +272,12 @@ public class MainActivity extends AppCompatActivity {
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
-            result[23] = String.valueOf(cost+unsafeMediumCost.intValue());
-            return result;
+            cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());
+            return cells;
         }
 
         @Override
         protected void onPostExecute(String[] result){
-            cells = result.clone();
             calculateButton.setEnabled(true);
             adapter.notifyDataSetChanged();
             cancelButton.setEnabled(true);
