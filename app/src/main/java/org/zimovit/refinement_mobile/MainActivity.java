@@ -11,9 +11,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ProgressBar;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.math.BigInteger;
@@ -40,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     GridView gv;
     ArrayAdapter<String> adapter;
     ProgressBar hProgressBar;
+    private BackgroundProcess backgroundProcess;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,22 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         //creating table
 
-        //first row
-        cells[0] = "Уровень безопасной";
-        cells[1] = "Средняя стоимость";
-        cells[2] = "До +15";
-
-        //consecutive rows
-        for (int i = 3; i < 19; i += 3){
-            cells[i] = "+"+((i-3)/3+5);
-            cells[i+1] = "0";
-            cells[i+2] = "0";
-        }
-
-        //last row
-        cells[21] = "Небезопасная";
-        cells[22] = "0";
-        cells[23] = "0";
+        createBlankTable();
 
         //Table is formed
 
@@ -101,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener cancelClicked = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cancelButton.setEnabled(false);
+                backgroundProcess.cancel(true);
             }
         };
         cancelButton.setOnClickListener(cancelClicked);
@@ -131,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //running background task
-        BackgroundProcess backgroundProcess = new BackgroundProcess();
+        backgroundProcess = new BackgroundProcess();
         backgroundProcess.execute(itemPrice, tries);
 
     }
@@ -213,6 +196,25 @@ public class MainActivity extends AppCompatActivity {
         return cost;
     }
 
+    private void createBlankTable(){
+        //first row
+        cells[0] = "Уровень безопасной";
+        cells[1] = "Средняя стоимость";
+        cells[2] = "До +15";
+
+        //consecutive rows
+        for (int i = 3; i < 19; i += 3){
+            cells[i] = "+"+((i-3)/3+5);
+            cells[i+1] = "0";
+            cells[i+2] = "0";
+        }
+
+        //last row
+        cells[21] = "Небезопасная";
+        cells[22] = "0";
+        cells[23] = "0";
+    }
+
 
     /**
      * AsyncTask private class to process in background
@@ -228,6 +230,15 @@ public class MainActivity extends AppCompatActivity {
             cancelButton.setEnabled(true);
             //and zeroing progress bar
             hProgressBar.setProgress(0);
+        }
+
+        @Override
+        protected void onCancelled(){
+            calculateButton.setEnabled(true);
+            cancelButton.setEnabled(false);
+            hProgressBar.setProgress(0);
+            createBlankTable();
+            adapter.notifyDataSetChanged();
         }
 
         @Override
@@ -249,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 //a lot of tries
                 for (int j = 0; j < tries; j++){
                     unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+4, 10))));
+                    if (isCancelled()) return null;
                 }
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
                 int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
@@ -259,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
                 unsafeMediumCost = new BigInteger("0");
                 for (int j = 0; j < tries; j++){
                     unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
+                    if (isCancelled()) return null;
                 }
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
                 cost = cost+unsafeMediumCost.intValue();
@@ -270,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
             BigInteger unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
                 unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(4, 10))));
+                if (isCancelled()) return null;
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
             int cost = refinementPrice + unsafeMediumCost.intValue();
@@ -279,6 +293,7 @@ public class MainActivity extends AppCompatActivity {
             unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
                 unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(improvedRefinement())));
+                if (isCancelled()) return null;
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
@@ -301,7 +316,5 @@ public class MainActivity extends AppCompatActivity {
             hProgressBar.setProgress(values[0]);
         }
 
-        //TODO implement progress bar update
-        //TODO implement cancel
     }
 }
