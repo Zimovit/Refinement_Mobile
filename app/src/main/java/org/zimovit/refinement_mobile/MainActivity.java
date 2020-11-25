@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     GridView gv;
     ArrayAdapter<String> adapter;
+    ProgressBar hProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,12 +101,14 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener cancelClicked = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("qwerty", adapter.getItem(0));
                 cancelButton.setEnabled(false);
-                adapter.notifyDataSetChanged();
             }
         };
         cancelButton.setOnClickListener(cancelClicked);
+
+        //and progress bar
+        hProgressBar = findViewById(R.id.progressBar);
+        hProgressBar.setMax(14);
 
     }
 
@@ -215,17 +219,22 @@ public class MainActivity extends AppCompatActivity {
      * takes price and number of tries as parameters
      * and updates static cells array
      */
-    private class BackgroundProcess extends AsyncTask<Integer, Integer, String[]>{
+    private class BackgroundProcess extends AsyncTask<Integer, Integer, Void>{
 
         @Override
         protected void onPreExecute(){
             //just disabling the button to prevent task rerun
             calculateButton.setEnabled(false);
+            cancelButton.setEnabled(true);
+            //and zeroing progress bar
+            hProgressBar.setProgress(0);
         }
 
         @Override
-        protected String[] doInBackground(Integer... integers) {
+        protected Void doInBackground(Integer... integers) {
 
+
+            int counter = 0;    //for progress bar
 
             //taking params
             int itemPrice = integers[0];
@@ -240,11 +249,11 @@ public class MainActivity extends AppCompatActivity {
                 //a lot of tries
                 for (int j = 0; j < tries; j++){
                     unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(i+4, 10))));
-
                 }
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries))); //calculating medium cost
                 int cost = refinementPrice + safeRefinement(i+4) + unsafeMediumCost.intValue();//final cost
                 cells[i*3+1] = String.valueOf(cost);
+                publishProgress(++counter);
 
                 //calculating +15
                 unsafeMediumCost = new BigInteger("0");
@@ -254,17 +263,18 @@ public class MainActivity extends AppCompatActivity {
                 unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
                 cost = cost+unsafeMediumCost.intValue();
                 cells[i*3+2] = String.valueOf(cost);
+                publishProgress(++counter);
             }
 
             //totally unsafe
             BigInteger unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
                 unsafeMediumCost = unsafeMediumCost.add(new BigInteger(String.valueOf(unsafeRefinement(4, 10))));
-
             }
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
             int cost = refinementPrice + unsafeMediumCost.intValue();
             cells[22] = String.valueOf(cost);
+            publishProgress(++counter);
 
             unsafeMediumCost = new BigInteger("0");
             for (int j = 0; j < tries; j++){
@@ -273,14 +283,22 @@ public class MainActivity extends AppCompatActivity {
             unsafeMediumCost = unsafeMediumCost.divide(new BigInteger(String.valueOf(tries)));
 
             cells[23] = String.valueOf(cost+unsafeMediumCost.intValue());
-            return cells;
+            publishProgress(++counter);
+
+            return null;
         }
 
         @Override
-        protected void onPostExecute(String[] result){
+        protected void onPostExecute(Void v){
             calculateButton.setEnabled(true);
             adapter.notifyDataSetChanged();
-            cancelButton.setEnabled(true);
+            cancelButton.setEnabled(false);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            hProgressBar.setProgress(values[0]);
         }
 
         //TODO implement progress bar update
